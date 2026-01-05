@@ -2081,7 +2081,10 @@ function Luna:Notification(data) -- action e.g open messages
 		-- Set Data
 		newNotification.Title.Text = data.Title
 		newNotification.Description.Text = data.Content 
-		newNotification.Icon.Image = GetIcon(data.Icon, data.ImageSource)
+		local iconResult = GetIcon(data.Icon, data.ImageSource)
+		if iconResult ~= nil then
+			newNotification.Icon.Image = iconResult
+		end
 
 		-- Set initial transparency values
 		newNotification.BackgroundTransparency = 1
@@ -2651,6 +2654,11 @@ function Luna:CreateWindow(WindowSettings)
 
 		local Tab = {}
 
+		-- Allow string as shortcut for Name
+		if type(TabSettings) == "string" then
+			TabSettings = {Name = TabSettings}
+		end
+
 		TabSettings = Kwargify({
 			Name = "Tab",
 			ShowTitle = true,
@@ -2663,7 +2671,10 @@ function Luna:CreateWindow(WindowSettings)
 		TabButton.Name = TabSettings.Name
 		TabButton.TextLabel.Text = TabSettings.Name
 		TabButton.Parent = Navigation.Tabs
-		TabButton.ImageLabel.Image = GetIcon(TabSettings.Icon, TabSettings.ImageSource)
+		local iconResult = GetIcon(TabSettings.Icon, TabSettings.ImageSource)
+		if iconResult ~= nil then
+			TabButton.ImageLabel.Image = iconResult
+		end
 
 		TabButton.Visible = true
 
@@ -4497,12 +4508,69 @@ function Luna:CreateWindow(WindowSettings)
 				Label.Text.Text = NewLabel
 			end
 
+			function LabelV:SetText(NewLabel)
+				return self:Set(NewLabel)
+			end
+
 			function LabelV:Destroy()
 				Label.Visible = false
 				Label:Destroy()
 			end
 
 			return LabelV
+		end
+
+		-- Label (shortcut method)
+		function Tab:Label(text)
+			if type(text) == "string" then
+				return self:CreateLabel({Text = text})
+			else
+				return self:CreateLabel(text)
+			end
+		end
+
+		-- Separator (shortcut for CreateDivider)
+		function Tab:Separator()
+			return self:CreateDivider()
+		end
+
+		-- Button (shortcut method)
+		function Tab:Button(ButtonSettings)
+			if type(ButtonSettings) == "string" then
+				return self:CreateButton({Name = ButtonSettings})
+			else
+				return self:CreateButton(ButtonSettings)
+			end
+		end
+
+		-- Toggle (shortcut method)
+		function Tab:Toggle(ToggleSettings)
+			return self:CreateToggle(ToggleSettings)
+		end
+
+		-- Slider (shortcut method)
+		function Tab:Slider(SliderSettings)
+			return self:CreateSlider(SliderSettings)
+		end
+
+		-- Input (shortcut method)
+		function Tab:Input(InputSettings)
+			return self:CreateInput(InputSettings)
+		end
+
+		-- Dropdown (shortcut method)
+		function Tab:Dropdown(DropdownSettings)
+			return self:CreateDropdown(DropdownSettings)
+		end
+
+		-- ColorPicker (shortcut method)
+		function Tab:ColorPicker(ColorPickerSettings)
+			return self:CreateColorPicker(ColorPickerSettings)
+		end
+
+		-- Keybind (shortcut method)
+		function Tab:Keybind(BindSettings)
+			return self:CreateKeybind(BindSettings)
 		end
 
 		-- Paragraph
@@ -6690,6 +6758,31 @@ function Luna:CreateWindow(WindowSettings)
 		Window.State = true
 		LunaUI.MobileSupport.Visible = false
 	end)
+
+	-- SetVisibility method
+	function Window:SetVisibility(visible)
+		if visible then
+			Unhide(Main, self.CurrentTab)
+		else
+			Hide(Main, self.Bind, false)
+		end
+		self.State = visible
+	end
+
+	-- Destroy method
+	function Window:Destroy()
+		Hide(Main, self.Bind, false)
+		Main.Visible = false
+	end
+
+	-- Store references for Hide/Unhide functions
+	Window.Main = Main
+	Window.Elements = Elements
+	Window.Navigation = Navigation
+	Window.Line = Main.Line
+	Window.Title = Main.Title
+	Window.Logo = Main.Logo
+	Window.Controls = Main.Controls
 
 	return Window
 end
